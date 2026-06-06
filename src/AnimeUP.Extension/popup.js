@@ -128,12 +128,26 @@ async function handlePlay() {
   setStatus('loading', 'MPV Başlatılıyor...');
   playBtnText.textContent = 'Başlatılıyor...';
 
+  // Mevcut sekmenin çerezlerini topla (token korumalı akışlar için)
+  let cookieString = '';
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.url) {
+      const cookies = await chrome.cookies.getAll({ url: tab.url });
+      cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    }
+  } catch {
+    // cookies API yoksa veya hata olursa sessizce geç
+  }
+
+  const pageUrl = currentVideo.pageUrl || '';
   const payload = {
     action:  'play',
     url:     currentVideo.url,
     title:   currentVideo.title,
-    referer: currentVideo.pageUrl ? new URL(currentVideo.pageUrl).origin : '',
-    pageUrl: currentVideo.pageUrl
+    referer: pageUrl ? new URL(pageUrl).origin : '',
+    pageUrl: pageUrl,
+    cookies: cookieString || undefined,
   };
 
   try {
@@ -157,3 +171,4 @@ async function handlePlay() {
     playBtn.disabled = false;
   }
 }
+

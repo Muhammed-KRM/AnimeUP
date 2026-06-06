@@ -132,7 +132,7 @@ namespace AnimeUP.NativeHost.Helpers
             {
                 FileName         = mpvExe,
                 UseShellExecute  = false,
-                CreateNoWindow   = false,  // MPV penceresi görünür olmalı
+                CreateNoWindow   = false,
                 RedirectStandardError = false
             };
 
@@ -145,26 +145,44 @@ namespace AnimeUP.NativeHost.Helpers
                 : $"AnimeUP — {request.Title}";
             startInfo.ArgumentList.Add($"--title={title}");
 
-            // 3. Config dizini (mpv-config/ altındaki mpv.conf, shaders, scripts)
+            // 3. Config dizini
             if (Directory.Exists(ConfigDir))
                 startInfo.ArgumentList.Add($"--config-dir={ConfigDir}");
 
-            // 4. HTTP Header taklitleri (CORS ve referer engelleri için)
-            if (!string.IsNullOrWhiteSpace(request.Referer))
+            // 4. yt-dlp entegrasyonu (sibnet, turkanime, YouTube vb. için)
+            startInfo.ArgumentList.Add("--ytdl=yes");
+            string ytDlpExe = Path.Combine(AppDataDir, "mpv", "yt-dlp.exe");
+            if (File.Exists(ytDlpExe))
             {
-                startInfo.ArgumentList.Add(
-                    $"--http-header-fields=Referer: {request.Referer}," +
-                    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
+                startInfo.ArgumentList.Add($"--ytdl-path={ytDlpExe}");
+                Logger.Log($"[MpvLauncher] yt-dlp bulundu: {ytDlpExe}");
+            }
+            else
+            {
+                Logger.Warn("[MpvLauncher] yt-dlp bulunamadı, PATH fallback.");
             }
 
-            // 5. Render altyapısı — mpv.conf'daki ayarların üzerine yaz
+            // 5. HTTP header'lar (Referer + User-Agent + Cookie)
+            var headers = new System.Text.StringBuilder();
+            headers.Append("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
+
+            if (!string.IsNullOrWhiteSpace(request.Referer))
+                headers.Append($",Referer: {request.Referer}");
+
+            if (!string.IsNullOrWhiteSpace(request.Cookies))
+                headers.Append($",Cookie: {request.Cookies}");
+
+            startInfo.ArgumentList.Add($"--http-header-fields={headers}");
+
+            // 6. Render altyapısı
             startInfo.ArgumentList.Add("--vo=gpu-next");
             startInfo.ArgumentList.Add("--hwdec=auto-safe");
 
-            // 6. OSD başlangıç seviyesi
+            // 7. OSD başlangıç seviyesi
             startInfo.ArgumentList.Add("--osd-level=1");
 
             return startInfo;
         }
+
     }
 }

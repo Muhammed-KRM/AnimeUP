@@ -29,6 +29,11 @@ namespace AnimeUP.NativeHost.Models
         [JsonPropertyName("referer")]
         public string Referer { get; init; } = string.Empty;
 
+        /// <summary>Tarayıcı oturum çerezleri (token korumalı akışlar için)</summary>
+        [JsonPropertyName("cookies")]
+        public string? Cookies { get; init; }
+
+
         // ── Log Sorgu Alanları ────────────────────────────────────────────
 
         /// <summary>Log türü filtresi: "function" | "endpoint"</summary>
