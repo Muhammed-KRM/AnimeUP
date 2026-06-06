@@ -113,17 +113,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Content Script → Background: DOM'dan yakalanan video URL'si
     case 'videoDetectedFromDOM': {
-      const tabId = sender?.tab?.id;
-      const url   = message?.url;
-      const isIframe = message?.isIframe ?? false;
+      const tabId    = sender?.tab?.id;
+      const url      = message?.url;
+      const isIframe  = message?.isIframe   ?? false;
+      const isPageUrl = message?.isPageUrl  ?? false;
 
       if (tabId && url) {
-        const source = isIframe ? 'dom-iframe' : 'dom-video';
+        let source;
+        if (isPageUrl)       source = 'page-ytdlp';
+        else if (isIframe)   source = 'dom-iframe';
+        else                 source = 'dom-video';
+
         saveDetectedVideo(tabId, url, source).catch(() => {});
       }
 
       return false; // sync
     }
+
 
     // Popup → Background: MPV ile oynat
     case 'playWithMpv': {

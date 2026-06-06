@@ -1,40 +1,80 @@
 /**
- * AnimeUP — Content Script
+ * AnimeUP — Content Script v2.0
  * Dosya: src/AnimeUP.Extension/content.js
  *
  * Sorumluluklar:
  *  1. Sayfa DOM'unu <video>, <source> ve <iframe> etiketleri için tarar.
- *  2. SPA (Single Page Application) sitelerinde dinamik DOM değişikliklerini
- *     MutationObserver ile izler.
- *  3. Yakalanan URL'leri background service worker'a iletir.
- *  4. Service worker uykuya girdiğinde de veri kaybolmaz çünkü mesajlar
- *     background'u otomatik uyandırır.
- *
- * Güvenlik:
- *  - Yalnızca "http" ile başlayan URL'ler işlenir (data: / blob: atlanır).
- *  - chrome.runtime.sendMessage hataları sessizce yakalanır (eklenti disable vb.).
+ *  2. Ağ trafiğinden yakalanan URL'leri de destekler (background.js ile).
+ *  3. Bilinen embed player host'larını (Guaj, Alucard, Mave, Sibnet vb.) tanır.
+ *  4. YouTube URL'lerini doğrudan page URL olarak iletir (yt-dlp ile oynatılır).
+ *  5. SPA'larda MutationObserver ile dinamik DOM değişikliklerini izler.
  */
 
 'use strict';
 
-// ─── Sabitler ───────────────────────────────────────────────────────────────
-const VIDEO_EXTENSIONS = ['.m3u8', '.mp4', '.mpd', '.mkv', '.webm', '.flv'];
+// ─── Video URL Uzantıları ───────────────────────────────────────────────────
+const VIDEO_EXTENSIONS = ['.m3u8', '.mp4', '.mpd', '.mkv', '.webm', '.flv', '.ts', '.avi'];
+
+// ─── Bilinen Embed/Iframe Player Host'ları ──────────────────────────────────
+// Bunlar yt-dlp ile oynatılabilir (page URL olarak gönderilir)
 const IFRAME_HOSTS = [
+  // Global
   'streamtape', 'sibnet', 'mixdrop', 'fembed', 'ok.ru',
-  'dailymotion', 'openload', 'vidoza', 'doodstream', 'filemoon', 'openani'
+  'dailymotion', 'openload', 'vidoza', 'doodstream', 'filemoon',
+  'streamlare', 'streamhide', 'gogo-stream', 'gogocdn',
+  'mp4upload', 'sendvid', 'vudeo', 'voe.sx', 'upstream',
+  'embedsito', 'vidplay', 'vidmoly', 'filelions', 'videovard',
+
+  // Türk anime siteleri için özel player'lar
+  'openani',       // openani.me
+  'guaj',          // turkanime.tv → guaj player
+  'alucard',       // turkanime.tv → alucard player
+  'mave',          // tranimaci.com ve diğerleri
+  'alp.',          // anime izleme siteleri
+  'player.alucard',
+  'trguaj',
+  'anizm',
+  'animeciix',
+  'animecix',
+  'turkanime',
+  'yabancidizi',
+  'diziwatch',
+  'tranimeizle',
+  'clv.tr',
+  'cloudup',
+  'cloudvideo',
+  'jplayer',
+  'superplayer',
+  'easyvideo',
+  'vidhide',
+  'vidhidepro',
+  'odnoklassniki',
+  'userload',
+  'uqload',
+  'streamwish',
+  'wishembed',
 ];
 
-// MutationObserver için debounce gecikmesi (ms) — her DOM değişikliğinde
-// taramayı geciktirerek performans yitimini önler.
-const DEBOUNCE_MS = 400;
+// ─── YouTube / yt-dlp ile oynatılacak siteler ──────────────────────────────
+// Bu sitelerde page URL'nin kendisi yt-dlp'ye verilir
+const YTDLP_PAGE_HOSTS = [
+  'youtube.com',
+  'youtu.be',
+  'nicovideo.jp',
+  'bilibili.com',
+  'crunchyroll.com',
+  'hidive.com',
+  'funimation.com',
+];
 
-// ─── Yardımcı: Güvenli URL doğrulama ────────────────────────────────────────
+const DEBOUNCE_MS = 500;
+
+// ─── Yardımcılar ────────────────────────────────────────────────────────────
 function isValidHttpUrl(url) {
   if (!url || typeof url !== 'string') return false;
   return url.startsWith('http://') || url.startsWith('https://');
 }
 
-// ─── Yardımcı: Uzantıya göre video URL tespiti ──────────────────────────────
 function isVideoUrl(url) {
   if (!isValidHttpUrl(url)) return false;
   try {
@@ -45,53 +85,135 @@ function isVideoUrl(url) {
   }
 }
 
-// ─── Yardımcı: Bilinen iframe barındırıcı tespiti ───────────────────────────
 function isKnownIframeHost(url) {
   if (!isValidHttpUrl(url)) return false;
-  return IFRAME_HOSTS.some(host => url.includes(host));
+  const lower = url.toLowerCase();
+  return IFRAME_HOSTS.some(host => lower.includes(host));
+}
+
+function isYtdlpPageHost(url) {
+  if (!isValidHttpUrl(url)) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return YTDLP_PAGE_HOSTS.some(host => hostname.includes(host));
+  } catch {
+    return false;
+  }
 }
 
 // ─── Background'a mesaj gönder ───────────────────────────────────────────────
-function reportVideo(url, isIframe = false) {
+function reportVideo(url, isIframe = false, isPageUrl = false) {
   try {
     chrome.runtime.sendMessage({
       action: 'videoDetectedFromDOM',
       url,
-      isIframe
+      isIframe,
+      isPageUrl,
     });
   } catch {
-    // Eklenti devre dışı veya bağlantı yoksa sessizce geç.
+    // Eklenti devre dışı veya bağlantı yoksa sessizce geç
   }
 }
 
-// ─── DOM tarayıcı: tüm <video>, <source>, <iframe> elemanlarını kontrol eder ─
+// ─── Mevcut sayfanın yt-dlp ile oynatılıp oynatılamayacağını kontrol et ──
+function checkCurrentPageAsVideo() {
+  const pageUrl = window.location.href;
+  if (isYtdlpPageHost(pageUrl)) {
+    reportVideo(pageUrl, false, true);
+    return true;
+  }
+  return false;
+}
+
+// ─── DOM tarayıcı ────────────────────────────────────────────────────────────
 function scanForVideos() {
-  // 1. Doğrudan <video src=""> veya <video><source src=""></video>
+  // 1. Mevcut sayfa yt-dlp ile oynatılabilir mi? (YouTube, Crunchyroll vb.)
+  if (checkCurrentPageAsVideo()) return;
+
+  // 2. Doğrudan <video> elementleri
   const videoElements = document.querySelectorAll('video');
   for (const video of videoElements) {
-    if (isVideoUrl(video.src)) {
-      reportVideo(video.src, false);
-      return;
-    }
+    const srcs = [video.src, video.currentSrc];
     for (const source of video.querySelectorAll('source')) {
-      if (isVideoUrl(source.src)) {
-        reportVideo(source.src, false);
+      srcs.push(source.src);
+    }
+    for (const src of srcs) {
+      if (isVideoUrl(src)) {
+        reportVideo(src, false);
         return;
       }
     }
-    // currentSrc: tarayıcının seçtiği aktif kaynak
-    if (isVideoUrl(video.currentSrc)) {
-      reportVideo(video.currentSrc, false);
+    // blob: URL'leri de kaydet (HLS.js veya Shaka Player için)
+    if (video.src && video.src.startsWith('blob:')) {
+      // blob URL'yi göster ama ağ isteğinden gerçek URL gelecek
+      // background.js'in webRequest dinleyicisi bunu yakalar
+    }
+  }
+
+  // 3. <source> elementleri (video dışında)
+  const sourceEls = document.querySelectorAll('source[src]');
+  for (const s of sourceEls) {
+    if (isVideoUrl(s.src)) {
+      reportVideo(s.src, false);
       return;
     }
   }
 
-  // 2. Bilinen iframe barındırıcılar (Streamtape, Sibnet, Mixdrop vb.)
+  // 4. iframe embed player'ları
   const iframes = document.querySelectorAll('iframe');
   for (const iframe of iframes) {
-    const src = iframe.src || iframe.getAttribute('data-src') || '';
+    const src = iframe.src
+      || iframe.getAttribute('data-src')
+      || iframe.getAttribute('data-lazy-src')
+      || '';
+
+    if (!src) continue;
+
+    // Bilinen player host'u mu?
     if (isKnownIframeHost(src)) {
       reportVideo(src, true);
+      return;
+    }
+
+    // iframe içinde video URL var mı?
+    if (isVideoUrl(src)) {
+      reportVideo(src, false);
+      return;
+    }
+  }
+
+  // 5. <script> ve data attribute'larında gizli video URL ara
+  scanScriptDataAttributes();
+}
+
+// ─── Script ve data attribute tarayıcı ──────────────────────────────────────
+function scanScriptDataAttributes() {
+  // data-video-url, data-src, data-stream gibi attribute'lara bak
+  const candidates = document.querySelectorAll('[data-video-url],[data-stream],[data-hls],[data-source],[data-file]');
+  for (const el of candidates) {
+    const attrs = ['data-video-url', 'data-stream', 'data-hls', 'data-source', 'data-file'];
+    for (const attr of attrs) {
+      const val = el.getAttribute(attr);
+      if (val && isVideoUrl(val)) {
+        reportVideo(val, false);
+        return;
+      }
+    }
+  }
+
+  // JSON içinde m3u8/mp4 URL ara (inline script'lerde)
+  const scripts = document.querySelectorAll('script:not([src])');
+  for (const script of scripts) {
+    const text = script.textContent || '';
+    // m3u8 veya mp4 URL'si içeren JSON string bul
+    const m3u8Match = text.match(/["'](https?:\/\/[^"']*\.m3u8[^"']*?)["']/);
+    if (m3u8Match) {
+      reportVideo(m3u8Match[1], false);
+      return;
+    }
+    const mp4Match = text.match(/["'](https?:\/\/[^"']*\.mp4[^"']*?)["']/);
+    if (mp4Match) {
+      reportVideo(mp4Match[1], false);
       return;
     }
   }
@@ -121,21 +243,17 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 
-// document.body hazır değilse bekle
-if (document.body) {
+function startObserver() {
   observer.observe(document.body, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['src', 'data-src']
+    attributeFilter: ['src', 'data-src', 'data-lazy-src', 'data-video-url'],
   });
+}
+
+if (document.body) {
+  startObserver();
 } else {
-  document.addEventListener('DOMContentLoaded', () => {
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['src', 'data-src']
-    });
-  });
+  document.addEventListener('DOMContentLoaded', startObserver);
 }

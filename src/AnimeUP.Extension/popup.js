@@ -51,11 +51,13 @@ function showVideoInfo(video) {
   detectedUrl.title = video.url;
 
   const sourceLabels = {
-    'network':    'AĞDAN ALINDI',
-    'dom-video':  'DOM TESPITI',
-    'dom-iframe': 'IFRAME ALINDI'
+    'network':     'AĞDAN ALINDI',
+    'dom-video':   'DOM TESPİTİ',
+    'dom-iframe':  'IFRAME ALINDI',
+    'page-ytdlp':  'SAYFA (yt-dlp)',
   };
   sourceBadge.textContent = sourceLabels[video.source] ?? 'TESPİT EDİLDİ';
+
 }
 
 // ─── Yardımcı: URL'den kısa başlık türet ────────────────────────────────────
