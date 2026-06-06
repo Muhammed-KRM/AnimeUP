@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "AnimeUP - Real-Time Anime Upscaler",
+  "version": "1.0.0",
+  "description": "İzlediğiniz animeleri tek tıkla yerel MPV oynatıcısında Anime4K AI shader'ları ile gerçek zamanlı 4K kalitede izleyin.",
+  "permissions": [
+    "webRequest",
+    "nativeMessaging",
+    "activeTab",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AnimeUP",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["logs.html", "logs.css", "logs.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

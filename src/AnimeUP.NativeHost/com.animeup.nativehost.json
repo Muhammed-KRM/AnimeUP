@@ -1,0 +1,9 @@
+{
+  "name": "com.animeup.nativehost",
+  "description": "AnimeUP Chrome Extension Companion Host — MPV üzerinden gerçek zamanlı Anime4K upscaling",
+  "path": "AnimeUP.NativeHost.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://[EXTENSION_ID]/"
+  ]
+}

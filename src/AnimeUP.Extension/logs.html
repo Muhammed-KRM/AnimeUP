@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnimeUP — Log Paneli</title>
+  <meta name="description" content="AnimeUP Native Host fonksiyon ve endpoint loglarını görüntüleme paneli." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="logs.css" />
+</head>
+<body>
+
+  <!-- ─── Arka plan dekor katmanı ─── -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="app">
+
+    <!-- ─── Header ─── -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark">▶</div>
+        <div>
+          <h1 class="topbar-title">Anime<span class="accent">UP</span> <span class="topbar-sub">Log Paneli</span></h1>
+          <p class="topbar-desc">Native Host fonksiyon ve endpoint izleyicisi</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="btn-refresh" class="btn btn-ghost" title="Logları Yenile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Yenile
+        </button>
+        <button id="btn-clear" class="btn btn-danger" title="Tüm Logları Temizle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Temizle
+        </button>
+      </div>
+    </header>
+
+    <!-- ─── Filtre Çubuğu ─── -->
+    <section class="filter-bar">
+      <!-- Tür seçimi -->
+      <div class="filter-group">
+        <label class="filter-label">Log Türü</label>
+        <div class="segmented" id="log-type-toggle">
+          <button class="seg-btn active" data-value="function">Fonksiyon</button>
+          <button class="seg-btn" data-value="endpoint">Endpoint</button>
+        </div>
+      </div>
+
+      <!-- Önem derecesi -->
+      <div class="filter-group">
+        <label class="filter-label">Önem</label>
+        <div class="segmented" id="severity-toggle">
+          <button class="seg-btn active" data-value="">Tümü</button>
+          <button class="seg-btn" data-value="Success">Başarılı</button>
+          <button class="seg-btn" data-value="Error">Hata</button>
+        </div>
+      </div>
+
+      <!-- Limit -->
+      <div class="filter-group">
+        <label class="filter-label">Limit</label>
+        <select id="limit-select" class="filter-select">
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+
+      <!-- Metin arama -->
+      <div class="filter-group filter-search">
+        <label class="filter-label">Arama</label>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" class="filter-input" placeholder="Metot adı, hata, trace ID..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Özet İstatistikler ─── -->
+    <section class="stats-bar" id="stats-bar">
+      <div class="stat-chip" id="stat-total">
+        <span class="stat-val">—</span>
+        <span class="stat-lbl">Toplam</span>
+      </div>
+      <div class="stat-chip success" id="stat-success">
+        <span class="stat-val">—</span>
+        <span class="stat-lbl">Başarılı</span>
+      </div>
+      <div class="stat-chip error" id="stat-error">
+        <span class="stat-val">—</span>
+        <span class="stat-lbl">Hata</span>
+      </div>
+      <div class="stat-chip info" id="stat-avg-ms">
+        <span class="stat-val">—</span>
+        <span class="stat-lbl">Ort. Süre (ms)</span>
+      </div>
+    </section>
+
+    <!-- ─── Log Tablosu ─── -->
+    <main class="table-wrap">
+      <!-- Yükleniyor durumu -->
+      <div class="state-overlay" id="state-loading" style="display:none;">
+        <div class="spinner"></div>
+        <p>Loglar yükleniyor...</p>
+      </div>
+
+      <!-- Boş durum -->
+      <div class="state-overlay" id="state-empty" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Hiç log bulunamadı</p>
+        <small>Eklentiden bir video oynatın ve ardından yenileyin.</small>
+      </div>
+
+      <!-- Hata durumu -->
+      <div class="state-overlay" id="state-error" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon error-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p id="error-message">Native Host bağlantısı kurulamadı.</p>
+        <small>AnimeUP.NativeHost.exe çalışıyor mu?</small>
+      </div>
+
+      <table class="log-table" id="log-table">
+        <thead>
+          <tr>
+            <th class="col-status">Durum</th>
+            <th class="col-method">Metot / Aksiyon</th>
+            <th class="col-time">Süre</th>
+            <th class="col-date">Tarih</th>
+            <th class="col-expand"></th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </main>
+
+  </div>
+
+  <!-- ─── Detay Modal ─── -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" id="detail-modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Log Detayı</h3>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="logs.js"></script>
+</body>
+</html>

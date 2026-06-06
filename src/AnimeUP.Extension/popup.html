@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnimeUP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">▶</div>
+        <h1 class="logo-text">Anime<span class="accent">UP</span></h1>
+      </div>
+      <a id="btn-logs" class="logs-link" href="#" title="Log Panelini Aç">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </a>
+    </header>
+
+    <!-- Durum Göstergesi -->
+    <div class="status-card" id="status-card">
+      <div class="status-indicator">
+        <span class="pulse-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Video Aranıyor...</span>
+      </div>
+      <div class="status-badge" id="status-badge">TARAMA</div>
+    </div>
+
+    <!-- Video Bilgisi (video tespit edilince gösterilir) -->
+    <div class="video-info-card" id="video-info" style="display:none;">
+      <div class="video-info-header">
+        <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+        <span>Yakalanan Akış</span>
+      </div>
+      <p class="url-display" id="detected-url" title=""></p>
+      <div class="source-badge" id="source-badge">AĞDAN ALINDI</div>
+    </div>
+
+    <!-- Oynat Butonu -->
+    <button class="play-button" id="play-btn" disabled>
+      <span class="play-btn-content">
+        <svg class="play-btn-icon" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span id="play-btn-text">AnimeUP ile İzle</span>
+      </span>
+      <div class="play-btn-shimmer"></div>
+    </button>
+
+    <!-- Alt Bilgi -->
+    <footer class="footer">
+      <span>Anime4K</span>
+      <span class="dot-sep">·</span>
+      <span>MPV</span>
+      <span class="dot-sep">·</span>
+      <span>4K Upscale</span>
+    </footer>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

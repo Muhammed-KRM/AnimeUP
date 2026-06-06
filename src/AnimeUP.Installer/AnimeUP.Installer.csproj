@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>AnimeUP.Installer</AssemblyName>
+    <RootNamespace>AnimeUP.Installer</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Optimize>true</Optimize>
+    <!-- Windows Registry API yalnızca Windows'ta çalışır — CA1416 bilgi amaçlı -->
+    <SupportedOSPlatformVersion>10.0.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>10.0.0</TargetPlatformMinVersion>
+
+    <!-- Tek EXE, bağımsız dağıtım -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+</Project>
