@@ -18,42 +18,85 @@ const VIDEO_EXTENSIONS = ['.m3u8', '.mp4', '.mpd', '.mkv', '.webm', '.flv', '.ts
 // ─── Bilinen Embed/Iframe Player Host'ları ──────────────────────────────────
 // Bunlar yt-dlp ile oynatılabilir (page URL olarak gönderilir)
 const IFRAME_HOSTS = [
-  // Global
-  'streamtape', 'sibnet', 'mixdrop', 'fembed', 'ok.ru',
-  'dailymotion', 'openload', 'vidoza', 'doodstream', 'filemoon',
-  'streamlare', 'streamhide', 'gogo-stream', 'gogocdn',
-  'mp4upload', 'sendvid', 'vudeo', 'voe.sx', 'upstream',
-  'embedsito', 'vidplay', 'vidmoly', 'filelions', 'videovard',
+  // ── Global genel amaçlı video host'ları ──────────────────────────────────
+  'streamtape', 'sibnet',   'mixdrop',    'fembed',     'ok.ru',
+  'dailymotion','openload', 'vidoza',     'doodstream', 'filemoon',
+  'streamlare', 'streamhide','gogo-stream','gogocdn',   'mp4upload',
+  'sendvid',    'vudeo',    'voe.sx',     'voe.',       'upstream',
+  'embedsito',  'vidplay',  'vidmoly',    'filelions',  'videovard',
+  'vidhide',    'vidhidepro','uqload',    'userload',   'streamwish',
+  'wishembed',  'odnoklassniki',
 
-  // Türk anime siteleri için özel player'lar
-  'openani',       // openani.me
-  'guaj',          // turkanime.tv → guaj player
-  'alucard',       // turkanime.tv → alucard player
-  'mave',          // tranimaci.com ve diğerleri
-  'alp.',          // anime izleme siteleri
-  'player.alucard',
-  'trguaj',
-  'anizm',
-  'animeciix',
-  'animecix',
-  'turkanime',
-  'yabancidizi',
+  // ── turkanime.tv player'ları ──────────────────────────────────────────────
+  'alucard',        // ALUCARD(BETA)
+  'alucarx',        // ALUCARX(BETA)
+  'player.alucard', // alucard subdomain
+  'banka',          // BANKA(BETA)
+  'hdvid',          // HDVID
+  'sunl',           // SUNL
+  'cloneplayer',    // CLONE
+  'volplayer',      // VOL
+  'trguaj',         // Guaj varyant
+  'guaj',           // Guaj player
+  'turkanime',      // turkanime kendi embed'leri
+
+  // ── tranimeizle.io / tranimaci.com player'ları ───────────────────────────
+  'altrvip',        // AltrVip
+  'altrvip.net',
+  'babyts',         // Babyts
+  'babyts.net',
+  'gdrive',         // Gdrive (Google Drive embed)
+  'drive.google',   // Google Drive direct
+  'mave',           // Mave player
+  'tranimeizle',    // kendi embed'leri
+  'tranimaci',
+
+  // ── diziwatch.ac / yabancidizi player'ları ───────────────────────────────
   'diziwatch',
-  'tranimeizle',
+  'yabancidizi',
   'clv.tr',
   'cloudup',
   'cloudvideo',
+
+  // ── Türk anime genelinde kullanılan ──────────────────────────────────────
+  'openani',        // openani.me
+  'anizm',          // anizyum
+  'animeciix',
+  'animecix',
+  'alp.',           // alp. ile başlayan player subdomainleri
   'jplayer',
   'superplayer',
   'easyvideo',
-  'vidhide',
-  'vidhidepro',
-  'odnoklassniki',
-  'userload',
-  'uqload',
-  'streamwish',
-  'wishembed',
+
+  // ── Crunchyroll / Funimation gibi lisanslı siteler ───────────────────────
+  // Bu siteler yt-dlp page URL modunda ele alınıyor (YTDLP_PAGE_HOSTS)
+
+  // ── Ek popüler embed host'lar ────────────────────────────────────────────
+  'streamable',
+  'rumble.com',
+  'bilibili',
+  'nicovideo',
+  'tune.pk',
+  'veoh.com',
+  'rapidvideo',
+  'clipwatching',
+  'evoload',
+  'jetload',
+  'mixdrp',
+  'netu.ac',
+  'netuplayer',
+  'vstream',
+  'hydrax',
+  'playtaku',
+  'kwik.',          // kwik.cx ve benzeri (gogoanime için)
+  'embtaku',
+  'goload',
+  'playtaku',
+  'yugen.to',
+  'gounlimited',
+  'videomass',
 ];
+
 
 // ─── YouTube / yt-dlp ile oynatılacak siteler ──────────────────────────────
 // Bu sitelerde page URL'nin kendisi yt-dlp'ye verilir
