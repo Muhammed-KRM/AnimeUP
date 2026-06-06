@@ -20,16 +20,27 @@
 3. C# Native Host, MPV oynatıcısını Anime4K shader'larıyla başlatır.
 4. Eğer video 1080p altındaysa shader otomatik devreye girer — gerçek zamanlı 4K upscale başlar.
 
----
+## Kurulum (Kullanıcılar İçin)
 
-## Kurulum
+Projeyi bilgisayarınızda çalışır halde kurmak için aşağıdaki adımları takip edin:
 
-Detaylı kurulum adımları için [`docs/developer_document.md`](docs/developer_document.md) dosyasını inceleyin.
+1. **Paketi İndirin:**
+   * Projenin GitHub sayfasındaki **[Releases](https://github.com/Muhammed-KRM/AnimeUP/releases)** (Sürümler) sekmesinden en son `AnimeUP-v1.0.zip` paketini indirin ve bir klasöre çıkartın.
 
-**Hızlı Başlangıç:**
-1. `AnimeUP.Installer.exe`'yi çalıştırın.
-2. Chrome eklentisini `src/AnimeUP.Extension/` klasöründen yükleyin.
-3. Herhangi bir anime sitesine gidin ve popup'ı açın.
+2. **Eklentiyi Tarayıcıya Ekleyin:**
+   * Tarayıcınızda (Chrome/Edge/Brave) `chrome://extensions/` adresine gidin.
+   * Sağ üst köşedeki **Geliştirici Modu** (Developer Mode) seçeneğini aktif edin.
+   * Sol üstteki **Paketlenmemiş öğe yükle** (Load unpacked) butonuna tıklayın ve çıkarttığınız klasör içerisindeki `AnimeUP.Extension` klasörünü seçip onaylayın.
+   * Yüklenen **AnimeUP** kartındaki **Kimlik (ID)** değerini (örn: `jhhhkmmlpofmongalaejdkhidjbfajif`) kopyalayın.
+
+3. **Yükleyiciyi Çalıştırın:**
+   * Çıkarttığınız klasördeki **`AnimeUP.Installer.exe`** dosyasını çalıştırın.
+   * Kopyaladığınız eklenti ID'sini yapıştırıp **Enter** tuşuna basın.
+   * Kurulum tamamlandığında tarayıcınızı kapatıp tamamen yeniden başlatın.
+
+4. **İzlemeye Başlayın:**
+   * Herhangi bir anime sitesine girin ve bir video açın.
+   * Tarayıcınızın sağ üstündeki AnimeUP eklentisine tıklayın, **AnimeUP ile İzle** butonuna basın! MPV oynatıcı otomatik olarak açılacaktır.
 
 ---
 
