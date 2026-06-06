@@ -8,8 +8,7 @@
     "nativeMessaging",
     "activeTab",
     "storage",
-    "tabs",
-    "cookies"
+    "tabs"
   ],
 
   "host_permissions": [

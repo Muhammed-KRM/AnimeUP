@@ -1,13 +1,6 @@
 /**
  * AnimeUP — Popup Etkileşim Mantığı
  * Dosya: src/AnimeUP.Extension/popup.js
- *
- * Akış:
- *  1. DOMContentLoaded → aktif tab ID'sini al.
- *  2. Background'a "getDetectedVideo" mesajı gönder.
- *  3. Video varsa → durum göstergesini güncelle, oynat butonunu etkinleştir.
- *  4. Oynat butonuna basılırsa → "playWithMpv" mesajıyla background'u tetikle.
- *  5. Log butonuna basılırsa → chrome.tabs.create ile logs.html'i aç.
  */
 
 'use strict';
@@ -28,15 +21,14 @@ let currentVideo = null;
 
 // ─── Yardımcı: Durum göstergesini güncelle ──────────────────────────────────
 function setStatus(state, text) {
-  // state: 'scanning' | 'found' | 'loading' | 'error'
   statusDot.className = `pulse-dot ${state}`;
   statusText.textContent = text;
 
   const badgeMap = {
-    scanning: ['TARAMA',   ''],
-    found:    ['BULUNDU',  'found'],
+    scanning: ['TARAMA',       ''],
+    found:    ['BULUNDU',      'found'],
     loading:  ['BAŞLATILIYOR', ''],
-    error:    ['HATA',     'error']
+    error:    ['HATA',         'error']
   };
 
   const [label, cls] = badgeMap[state] ?? ['BEKLE', ''];
@@ -51,20 +43,18 @@ function showVideoInfo(video) {
   detectedUrl.title = video.url;
 
   const sourceLabels = {
-    'network':     'AĞDAN ALINDI',
-    'dom-video':   'DOM TESPİTİ',
-    'dom-iframe':  'IFRAME ALINDI',
-    'page-ytdlp':  'SAYFA (yt-dlp)',
+    'network':    'AĞDAN ALINDI',
+    'dom-video':  'DOM TESPİTİ',
+    'dom-iframe': 'IFRAME ALINDI',
+    'page-ytdlp': 'SAYFA (yt-dlp)',
   };
   sourceBadge.textContent = sourceLabels[video.source] ?? 'TESPİT EDİLDİ';
-
 }
 
 // ─── Yardımcı: URL'den kısa başlık türet ────────────────────────────────────
 function titleFromUrl(url) {
   try {
-    const u = new URL(url);
-    return u.hostname;
+    return new URL(url).hostname;
   } catch {
     return 'AnimeUP Stream';
   }
@@ -73,16 +63,13 @@ function titleFromUrl(url) {
 // ─── Ana başlatma: aktif tab'daki videoyu çek ───────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
 
-  // Log paneli bağlantısı
   logsLink.addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('logs.html') });
   });
 
-  // Oynat butonu tıklama
   playBtn.addEventListener('click', handlePlay);
 
-  // Aktif tab'ı bul
   let activeTab;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -97,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Background'dan tespit edilen videoyu iste
   try {
     const response = await chrome.runtime.sendMessage({
       action: 'getDetectedVideo',
@@ -128,18 +114,6 @@ async function handlePlay() {
   setStatus('loading', 'MPV Başlatılıyor...');
   playBtnText.textContent = 'Başlatılıyor...';
 
-  // Mevcut sekmenin çerezlerini topla (token korumalı akışlar için)
-  let cookieString = '';
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.url) {
-      const cookies = await chrome.cookies.getAll({ url: tab.url });
-      cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-    }
-  } catch {
-    // cookies API yoksa veya hata olursa sessizce geç
-  }
-
   const pageUrl = currentVideo.pageUrl || '';
   const payload = {
     action:  'play',
@@ -147,7 +121,6 @@ async function handlePlay() {
     title:   currentVideo.title,
     referer: pageUrl ? new URL(pageUrl).origin : '',
     pageUrl: pageUrl,
-    cookies: cookieString || undefined,
   };
 
   try {
@@ -171,4 +144,3 @@ async function handlePlay() {
     playBtn.disabled = false;
   }
 }
-
